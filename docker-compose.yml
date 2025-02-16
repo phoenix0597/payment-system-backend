@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payment_system
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+#  app:
+#    build: .
+#    ports:
+#      - "8000:8000"
+#    environment:
+#      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/payment_system
+#      SECRET_KEY: "your-secret-key-here"
+#      WEBHOOK_SECRET_KEY: "gfdmhghif38yrf9ew0jkf32"
+#    depends_on:
+#      - db
+
+volumes:
+  postgres_data:
