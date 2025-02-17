@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, Type, Optional, List
+from typing import Generic, TypeVar, Type, Optional, List, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -12,7 +12,7 @@ class BaseRepository(Generic[ModelType]):
         self.model = model
         self.session = session
 
-    async def get(self, id: int) -> Optional[ModelType]:
+    async def get(self, id: Union[int, str]) -> Optional[ModelType]:
         query = select(self.model).where(self.model.id == id)  # type: ignore
         result = await self.session.execute(query)
         return result.scalars().first()
@@ -29,7 +29,7 @@ class BaseRepository(Generic[ModelType]):
         await self.session.refresh(instance)
         return instance
 
-    async def update(self, id: int, **kwargs) -> Optional[ModelType]:
+    async def update(self, id: Union[int, str], **kwargs) -> Optional[ModelType]:
         instance = await self.get(id)
         if instance:
             for key, value in kwargs.items():
@@ -38,10 +38,20 @@ class BaseRepository(Generic[ModelType]):
             await self.session.refresh(instance)
         return instance
 
-    async def delete(self, id: int) -> bool:
+    async def delete(self, id: Union[int, str]) -> bool:
         instance = await self.get(id)
         if instance:
             await self.session.delete(instance)
             await self.session.commit()
             return True
         return False
+
+    async def get_one_by_filter(self, *filters) -> Optional[ModelType]:
+        query = select(self.model).where(*filters)
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
+    async def get_by_filter(self, *filters) -> List[ModelType]:
+        query = select(self.model).where(*filters)
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
