@@ -11,14 +11,7 @@ class AccountRepository(BaseRepository[Account]):
         super().__init__(Account, session)
 
     async def get_by_user_id(self, user_id: int):
-        query = select(Account).where(Account.user_id == user_id)  # type: ignore
-        result = await self.session.execute(query)
-        return result.scalars().all()
+        return await self.get_by_filter(self.model.user_id == user_id)
 
     async def update_balance(self, account_id: int, amount: Decimal) -> Account:
-        account = await self.get(account_id)
-        if account:
-            account.balance += amount
-            await self.session.commit()
-            await self.session.refresh(account)
-        return account
+        return await self.update(account_id, balance=self.model.balance + amount)
