@@ -1,4 +1,3 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.models.user import User
 from src.infrastructure.repositories.base import BaseRepository
