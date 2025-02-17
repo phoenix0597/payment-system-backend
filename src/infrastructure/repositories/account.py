@@ -14,3 +14,10 @@ class AccountRepository(BaseRepository[Account]):
 
     async def update_balance(self, account_id: int, amount: Decimal) -> Account:
         return await self.update(account_id, balance=self.model.balance + amount)
+
+    async def get_balance(self, account_id: int) -> Decimal:
+        """Get current account balance"""
+        account = await self.get(account_id)
+        if not account:
+            raise ValueError(f"Account {account_id} not found")
+        return account.balance
