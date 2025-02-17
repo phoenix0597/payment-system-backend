@@ -1,6 +1,5 @@
 from decimal import Decimal
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.domain.models.account import Account
 from src.infrastructure.repositories.base import BaseRepository
