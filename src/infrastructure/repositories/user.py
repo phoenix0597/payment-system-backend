@@ -9,11 +9,7 @@ class UserRepository(BaseRepository[User]):
         super().__init__(User, session)
 
     async def get_by_email(self, email: str):
-        query = select(User).where(User.email == email)  # type: ignore
-        result = await self.session.execute(query)
-        return result.scalars().first()
+        return await self.get_one_by_filter(self.model.email == email)
 
     async def get_with_accounts(self, user_id: int):
-        query = select(User).where(User.id == user_id)  # type: ignore
-        result = await self.session.execute(query)
-        return result.scalars().first()
+        return await self.get(user_id)
