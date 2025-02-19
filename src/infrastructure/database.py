@@ -9,6 +9,7 @@ Base = DeclarativeBase()
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get database session."""
     async with async_session() as session:
         try:
             yield session
