@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 from src.application.services.auth import AuthService
 from src.infrastructure.repositories.user import UserRepository
 from src.api.v1.schemas.user import UserCreate, UserUpdate, UserInDB
@@ -9,6 +11,15 @@ class UserService:
         self.auth_service = auth_service
 
     async def create_user(self, user_data: UserCreate):
+        """
+        Create a new user.
+
+        Args:
+            user_data (UserCreate): The user data to create.
+
+        Returns:
+            UserInDB: The created user object
+        """
         hashed_password = self.auth_service.get_password_hash(user_data.password)
         user = await self.user_repository.create(
             email=user_data.email,
@@ -17,7 +28,19 @@ class UserService:
         )
         return UserInDB.model_validate(user)
 
-    async def update_user(self, user_id: int, user_data: UserUpdate):
+    async def update_user(
+        self, user_id: int, user_data: UserUpdate
+    ) -> Optional[UserInDB]:
+        """
+        Update a user's information.
+
+        Args:
+            user_id (int): The ID of the user to update.
+            user_data (UserUpdate): The updated user data.
+
+        Returns:
+            Optional[UserInDB]: The updated user object if successful, otherwise None
+        """
         update_data = user_data.model_dump(exclude_unset=True)
         if "password" in update_data:
             update_data["hashed_password"] = self.auth_service.get_password_hash(
@@ -29,11 +52,26 @@ class UserService:
     async def delete_user(self, user_id: int):
         return await self.user_repository.delete(user_id)
 
-    async def get_user(self, user_id: int):
+    async def get_user(self, user_id: int) -> Optional[UserInDB]:
+        """
+        Get a user by ID.
+
+        Args:
+            user_id (int): The ID of the user to retrieve.
+
+        Returns:
+            Optional[UserInDB]: The user object if found, otherwise None
+        """
         user = await self.user_repository.get(user_id)
         return UserInDB.model_validate(user) if user else None
 
-    async def get_users(self):
+    async def get_users(self) -> List[UserInDB]:
+        """
+        Get all users.
+
+        Returns:
+            List[UserInDB]: List of all users
+        """
         users = await self.user_repository.get_all()
         return [UserInDB.model_validate(user) for user in users]
 
