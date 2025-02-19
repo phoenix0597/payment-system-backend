@@ -1,64 +1,37 @@
 from typing import Annotated
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.v1.schemas.user import UserInDB
-from src.application.services.account import AccountService
 from src.config.config import settings
-from src.infrastructure.database import get_session
-from src.infrastructure.repositories.user import UserRepository
-from src.infrastructure.repositories.account import AccountRepository
-from src.infrastructure.repositories.payment import PaymentRepository
-from src.application.services.auth import AuthService
 from src.application.services.user import UserService
-from src.application.services.payment import PaymentService
+from src.infrastructure.database import get_session
+from src.application.services.base import ServiceFactory
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 
-# Define app dependencies to make the code more clen
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
 
-def get_user_service(session: SessionDep):
-    """
-    Create and return a UserService instance with its dependencies.
-    """
-    user_repo = UserRepository(session)
-    auth_service = AuthService(user_repo)
-    return UserService(user_repo, auth_service)
+async def get_services(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ServiceFactory:
+    """Create and return service factory instance."""
+    return ServiceFactory(session)
 
 
-def get_auth_service(session: SessionDep):
-    """
-    Create and return an AuthService instance with its dependencies.
-    """
-    user_repo = UserRepository(session)
-    return AuthService(user_repo)
+ServiceFactoryDep = Annotated[ServiceFactory, Depends(get_services)]
 
 
-def get_payment_service(session: SessionDep):
-    """
-    Create and return a PaymentService instance with its dependencies.
-    """
-    payment_repo = PaymentRepository(session)
-    account_repo = AccountRepository(session)
-    return PaymentService(payment_repo, account_repo)
-
-
-def get_account_service(session: SessionDep):
-    """
-    Create and return an AccountService instance with its dependencies.
-    """
-    account_repo = AccountRepository(session)
-    return AccountService(account_repo)
+def get_user_service(services: ServiceFactoryDep) -> UserService:
+    """Get user service instance."""
+    return services.get_user_service()
 
 
 async def get_current_user(
-    token: TokenDep,
+    token: Annotated[str, Depends(oauth2_scheme)],
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> UserInDB:
     """
