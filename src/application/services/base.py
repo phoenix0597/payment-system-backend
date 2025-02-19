@@ -1,13 +1,9 @@
-from typing import Annotated
-
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.services.account import AccountService
 from src.application.services.auth import AuthService
 from src.application.services.payment import PaymentService
 from src.application.services.user import UserService
-from src.infrastructure.database import get_session
 from src.infrastructure.repositories.account import AccountRepository
 from src.infrastructure.repositories.payment import PaymentRepository
 from src.infrastructure.repositories.user import UserRepository
@@ -22,7 +18,7 @@ class ServiceFactory:
         auth_service = AuthService(user_repo)
         return UserService(user_repo, auth_service)
 
-    def get_auth_service(self):
+    def get_auth_service(self) -> AuthService:
         user_repo = UserRepository(self.session)
         return AuthService(user_repo)
 
