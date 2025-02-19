@@ -84,7 +84,7 @@ class PaymentService:
 
         await self.account_repository.update_balance(account.id, payload.amount)
 
-        return PaymentInDB.model_validate(payment) if payment else None
+        return PaymentInDB.model_validate(payment)
 
     async def get_payment(self, payment_id: int) -> Optional[PaymentInDB]:
         """
