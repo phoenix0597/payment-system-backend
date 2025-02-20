@@ -6,12 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.v1.schemas.user import UserInDB
 from src.application.services.auth import AuthService
+from src.application.services.payment import PaymentService
 from src.config.config import settings
 from src.application.services.user import UserService
 from src.infrastructure.database import get_session
 from src.application.services.base import ServiceFactory
 
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.TOKEN_URL)
 
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
@@ -44,24 +44,7 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> UserInDB:
-    """
-    Get the current authenticated user based on the JWT token.
 
-    Args:
-        token: JWT token from the request
-        user_service: Instance of UserService for user operations
-
-    Returns:
-        User: The current authenticated user
-
-    Raises:
-        HTTPException: If token is invalid or user not found
-    """
-    # credentials_exception = HTTPException(
-    #     status_code=status.HTTP_401_UNAUTHORIZED,
-    #     detail="Could not validate credentials",
-    #     headers={"WWW-Authenticate": "Bearer"},
-    # )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         user_id: int = payload.get("sub")
@@ -89,3 +72,7 @@ async def get_current_admin(
 
 async def get_auth_service(services: ServiceFactoryDep) -> AuthService:
     return services.get_auth_service()
+
+
+async def get_payment_service(services: ServiceFactoryDep) -> PaymentService:
+    return services.get_payment_service()
