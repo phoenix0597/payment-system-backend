@@ -25,6 +25,14 @@ async def get_services(
 ServiceFactoryDep = Annotated[ServiceFactory, Depends(get_services)]
 
 
+def raise_credentials_exception():
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
 def get_user_service(services: ServiceFactoryDep) -> UserService:
     """Get user service instance."""
     return services.get_user_service()
@@ -47,22 +55,22 @@ async def get_current_user(
     Raises:
         HTTPException: If token is invalid or user not found
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    # credentials_exception = HTTPException(
+    #     status_code=status.HTTP_401_UNAUTHORIZED,
+    #     detail="Could not validate credentials",
+    #     headers={"WWW-Authenticate": "Bearer"},
+    # )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         user_id: int = payload.get("sub")
         if user_id is None:
-            raise credentials_exception
+            raise raise_credentials_exception()
     except JWTError:
-        raise credentials_exception
+        raise raise_credentials_exception()
 
     user = await user_service.get_user(user_id)
     if user is None:
-        raise credentials_exception
+        raise raise_credentials_exception()
     return user
 
 
