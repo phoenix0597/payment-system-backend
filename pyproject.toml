@@ -8,6 +8,7 @@ sqlalchemy = "^2.0.38"
 python-jose = "^3.3.0"
 passlib = "^1.7.4"
 fastapi = "^0.115.8"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
