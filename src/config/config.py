@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = ""
     WEBHOOK_SECRET_KEY: str = ""
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    TOKEN_URL: str = ""
+    API_PREFIX: str = "/api/v1"
+    TOKEN_URL: str = "/auth/token"
 
     model_config = SettingsConfigDict(
         env_file=[BASE_DIR / ".env.sample", BASE_DIR / ".env"],
