@@ -5,12 +5,14 @@ from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.v1.schemas.user import UserInDB
+from src.application.services.auth import AuthService
 from src.config.config import settings
 from src.application.services.user import UserService
 from src.infrastructure.database import get_session
 from src.application.services.base import ServiceFactory
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.TOKEN_URL)
 
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
@@ -83,3 +85,7 @@ async def get_current_admin(
             detail="The user doesn't have enough privileges",
         )
     return current_user
+
+
+async def get_auth_service(services: ServiceFactoryDep) -> AuthService:
+    return services.get_auth_service()
