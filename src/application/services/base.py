@@ -12,21 +12,19 @@ from src.infrastructure.repositories.user import UserRepository
 class ServiceFactory:
     def __init__(self, session: AsyncSession):
         self.session = session
+        self.user_repo = UserRepository(session)
+        self.account_repo = AccountRepository(session)
+        self.payment_repo = PaymentRepository(session)
 
     def get_user_service(self) -> UserService:
-        user_repo = UserRepository(self.session)
-        auth_service = AuthService(user_repo)
-        return UserService(user_repo, auth_service)
+        auth_service = AuthService(self.user_repo)
+        return UserService(self.user_repo, auth_service)
 
     def get_auth_service(self) -> AuthService:
-        user_repo = UserRepository(self.session)
-        return AuthService(user_repo)
+        return AuthService(self.user_repo)
 
     def get_account_service(self) -> AccountService:
-        account_repo = AccountRepository(self.session)
-        return AccountService(account_repo)
+        return AccountService(self.account_repo)
 
     def get_payment_service(self) -> PaymentService:
-        payment_repo = PaymentRepository(self.session)
-        account_repo = AccountRepository(self.session)
-        return PaymentService(payment_repo, account_repo)
+        return PaymentService(self.payment_repo, self.account_repo)
