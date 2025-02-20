@@ -5,7 +5,12 @@ from src.config.config import settings
 
 engine = create_async_engine(settings.DATABASE_URL, echo=True)
 async_session = async_sessionmaker(engine, expire_on_commit=False)
-Base = DeclarativeBase()
+
+
+class Base(DeclarativeBase):
+    """Base class for declarative models."""
+
+    pass
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
