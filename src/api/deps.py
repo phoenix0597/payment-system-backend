@@ -12,7 +12,10 @@ from src.application.services.user import UserService
 from src.infrastructure.database import get_session
 from src.application.services.base import ServiceFactory
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.TOKEN_URL)
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_PREFIX}{settings.TOKEN_URL}"
+)
+# print(f"{settings.API_PREFIX}{settings.TOKEN_URL}")
 
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
@@ -44,6 +47,7 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> UserInDB:
+    print(f"{token=}")
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
