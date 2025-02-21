@@ -22,6 +22,11 @@ app.include_router(
 )
 
 
+app.include_router(
+    accounts.router, prefix=settings.API_PREFIX + "/accounts", tags=["accounts"]
+)
+
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
