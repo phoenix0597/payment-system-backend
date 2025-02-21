@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.v1.routes import auth, users, payments
+from src.api.v1.routes import auth, users, payments, accounts
 from src.config.config import settings
 
 app = FastAPI(title="Payment System API")
@@ -15,9 +15,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(
-    auth.router, prefix=settings.API_PREFIX + settings.TOKEN_URL, tags=["auth"]
-)
+app.include_router(auth.router, prefix=settings.API_PREFIX + "/auth", tags=["auth"])
 app.include_router(users.router, prefix=settings.API_PREFIX + "/users", tags=["users"])
 app.include_router(
     payments.router, prefix=settings.API_PREFIX + "/payments", tags=["payments"]
