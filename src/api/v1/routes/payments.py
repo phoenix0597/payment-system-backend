@@ -22,4 +22,4 @@ async def get_user_payments(
     current_user=Depends(get_current_user),
     payment_service: PaymentService = Depends(get_payment_service),
 ):
-    return await payment_service.get_user_payments(current_user.id)
+    return await payment_service.get_payments_by_user_id(current_user.id)
