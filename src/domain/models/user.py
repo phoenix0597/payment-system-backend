@@ -13,7 +13,10 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
 
     accounts = relationship(
-        "Account", back_populates="user", cascade="all, delete-orphan"
+        "Account",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
     payments = relationship(
         "Payment", back_populates="user", cascade="all, delete-orphan"
