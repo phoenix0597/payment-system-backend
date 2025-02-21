@@ -21,8 +21,14 @@ class UserInDB(UserBase):
     id: int
     is_admin: bool
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        extra="allow",
+    )
 
 
 class UserWithAccounts(UserInDB):
-    accounts: List["AccountInDB"]
+    accounts: List[AccountInDB]
+
+
+UserWithAccounts.model_rebuild()
