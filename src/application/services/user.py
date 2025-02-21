@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from src.application.services.auth import AuthService
 from src.infrastructure.repositories.user import UserRepository
-from src.api.v1.schemas.user import UserCreate, UserUpdate, UserInDB
+from src.api.v1.schemas.user import UserCreate, UserUpdate, UserInDB, UserWithAccounts
 
 
 class UserService:
@@ -65,16 +65,12 @@ class UserService:
         user = await self.user_repository.get(user_id)
         return UserInDB.model_validate(user) if user else None
 
-    async def get_users(self) -> List[UserInDB]:
+    async def get_users(self) -> List[UserWithAccounts]:
         """
-        Get all users.
+        Get all users with their accounts.
 
         Returns:
-            List[UserInDB]: List of all users
+            List[UserWithAccounts]: List of all users with their accounts
         """
-        users = await self.user_repository.get_all()
-        return [UserInDB.model_validate(user) for user in users]
-
-    async def get_user_by_email(self, email: str):
-        user = await self.user_repository.get_by_email(email)
-        return UserInDB.model_validate(user) if user else None
+        users = await self.user_repository.get_all_with_accounts()
+        return [UserWithAccounts.model_validate(user) for user in users]
