@@ -29,6 +29,3 @@ class UserInDB(UserBase):
 
 class UserWithAccounts(UserInDB):
     accounts: List[AccountInDB]
-
-
-UserWithAccounts.model_rebuild()
