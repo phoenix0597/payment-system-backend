@@ -23,7 +23,7 @@ class UserInDB(UserBase):
 
     model_config = ConfigDict(
         from_attributes=True,
-        extra="allow",
+        # extra="allow",
     )
 
 
