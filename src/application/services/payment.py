@@ -47,7 +47,30 @@ class PaymentService:
         """
         data = f"{payload.account_id}{payload.amount}{payload.transaction_id}{payload.user_id}{settings.WEBHOOK_SECRET_KEY}"
         calculated_signature = hashlib.sha256(data.encode()).hexdigest()
+
+        # FOR DEBUGGING
+        print(f"{data=}")
+        print(f"{calculated_signature=}")
+
         return calculated_signature == payload.signature
+
+    async def _get_or_create_account(self, account_id: int, user_id: int) -> int:
+        """
+        Get an existing account ID if it belongs to the user, otherwise create a new one.
+
+        Args:
+            account_id (int): The account ID from the payload.
+            user_id (int): The user ID from the payload.
+
+        Returns:
+            int: The account ID to use for the payment.
+        """
+        account = await self.account_repository.get(account_id)
+        if account and account.user_id == user_id:
+            return account.id
+        # Если счет не существует или принадлежит другому пользователю, создаем новый
+        new_account = await self.account_repository.create(user_id=user_id)
+        return new_account.id
 
     async def process_payment(self, payload: WebhookPayload) -> PaymentInDB:
         """
@@ -66,23 +89,24 @@ class PaymentService:
             raise ValueError("Invalid signature")
 
         existing_payment = await self.payment_repository.get_by_transaction_id(
-            payload.transaction_id
+            payload.transaction_id,
         )
         if existing_payment:
             raise ValueError("Transaction already processed")
 
-        account = await self.account_repository.get(payload.account_id)
-        if not account:
-            account = await self.account_repository.create(user_id=payload.user_id)
+        # account = await self.account_repository.get(payload.account_id)
+        account_id = await self._get_or_create_account(
+            payload.account_id, payload.user_id
+        )
 
         payment = await self.payment_repository.create(
             transaction_id=payload.transaction_id,
             user_id=payload.user_id,
-            account_id=account.id,
+            account_id=account_id,
             amount=payload.amount,
         )
 
-        await self.account_repository.update_balance(account.id, payload.amount)
+        await self.account_repository.update_balance(account_id, payload.amount)
 
         return PaymentInDB.model_validate(payment)
 
