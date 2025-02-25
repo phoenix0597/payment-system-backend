@@ -9,7 +9,9 @@ class PaymentRepository(BaseRepository[Payment]):
         super().__init__(Payment, session)
 
     async def get_by_transaction_id(self, transaction_id: str):
-        return await self.get_one_by_filter(self.model.transaction_id == transaction_id)
+        return await self.get_one_by_filter(
+            self.model.transaction_id == transaction_id,
+        )
 
     async def get_by_user_id(self, user_id: int):
         return await self.get_by_filter(Payment.user_id == user_id)
