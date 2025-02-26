@@ -129,7 +129,10 @@ class PaymentService:
             Optional[PaymentInDB]: The payment if found, None otherwise.
         """
         payment = await self.payment_repository.get(payment_id)
-        return PaymentInDB.model_validate(payment) if payment else None
+        if payment:
+            payment_schema = PaymentInDB.model_validate(payment)
+            return payment_schema
+        return None
 
     async def get_payments_by_user_id(self, user_id: int) -> List[PaymentInDB]:
         """
