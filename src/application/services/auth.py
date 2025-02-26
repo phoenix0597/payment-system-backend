@@ -68,4 +68,5 @@ class AuthService:
             )
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
+        log.debug(f"Created access token for user_id: {data.get('sub')}")
         return encoded_jwt
