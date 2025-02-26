@@ -73,6 +73,7 @@ class PaymentService:
         if account and account.user_id == user_id:
             return account.id
         # Если счет не существует или принадлежит другому пользователю, создаем новый
+        log.info(f"Creating new account for user_id: {user_id}")
         new_account = await self.account_repository.create(user_id=user_id)
         return new_account.id
 
@@ -89,16 +90,18 @@ class PaymentService:
         Raises:
             ValueError: If the signature is invalid or the transaction has already been processed.
         """
+        log.info(f"Processing payment with transaction_id: {payload.transaction_id}")
         if not self.verify_signature(payload):
+            log.error(f"Invalid signature for transaction_id: {payload.transaction_id}")
             raise ValueError("Invalid signature")
 
         existing_payment = await self.payment_repository.get_by_transaction_id(
             payload.transaction_id,
         )
         if existing_payment:
+            log.warning(f"Duplicate transaction_id: {payload.transaction_id}")
             raise ValueError("Transaction already processed")
 
-        # account = await self.account_repository.get(payload.account_id)
         account_id = await self._get_or_create_account(
             payload.account_id, payload.user_id
         )
@@ -111,8 +114,9 @@ class PaymentService:
         )
 
         await self.account_repository.update_balance(account_id, payload.amount)
-
-        return PaymentInDB.model_validate(payment)
+        payment_schema = PaymentInDB.model_validate(payment)
+        log.info(f"Processed payment with transaction_id: {payment.transaction_id}")
+        return payment_schema
 
     async def get_payment(self, payment_id: int) -> Optional[PaymentInDB]:
         """
