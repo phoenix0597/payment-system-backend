@@ -44,13 +44,19 @@ class UserService:
         Returns:
             Optional[UserInDB]: The updated user object if successful, otherwise None
         """
+        log.info(f"Updating user with ID: {user_id}")
         update_data = user_data.model_dump(exclude_unset=True)
         if "password" in update_data:
             update_data["hashed_password"] = self.auth_service.get_password_hash(
                 update_data.pop("password")
             )
         updated_user = await self.user_repository.update(user_id, **update_data)
-        return UserInDB.model_validate(updated_user) if updated_user else None
+        if updated_user:
+            updated_user_schema = UserInDB.model_validate(updated_user)
+            log.info(f"User {user_id} updated successfully")
+            return updated_user_schema
+        log.warning(f"User {user_id} not found")
+        return None
 
     async def delete_user(self, user_id: int):
         return await self.user_repository.delete(user_id)
