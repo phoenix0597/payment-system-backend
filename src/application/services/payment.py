@@ -142,7 +142,9 @@ class PaymentService:
             List[PaymentInDB]: A list of payments belonging to the user.
         """
         payments = await self.payment_repository.get_by_user_id(user_id)
-        return [PaymentInDB.model_validate(payment) for payment in payments]
+        payment_schemas = [PaymentInDB.model_validate(payment) for payment in payments]
+        log.info(f"Retrieved {len(payment_schemas)} payments for user_id: {user_id}")
+        return payment_schemas
 
     async def get_payment_by_transaction_id(
         self, transaction_id: str
