@@ -172,4 +172,6 @@ class PaymentService:
             Decimal: The total amount of payments.
         """
         payments = await self.get_payments_by_user_id(user_id)
-        return sum((payment.amount for payment in payments), Decimal("0"))
+        total = sum((payment.amount for payment in payments), Decimal("0"))
+        log.debug(f"Total payments amount for user with user_id: {user_id} is: {total}")
+        return total
