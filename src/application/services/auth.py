@@ -5,6 +5,7 @@ from passlib.context import CryptContext
 
 from src.api.v1.schemas.user import UserInDB
 from src.config.config import settings
+from src.core.logger import log
 from src.infrastructure.repositories.user import UserRepository
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -33,11 +34,15 @@ class AuthService:
         Returns:
             Optional[UserInDB]: Authenticated user or None
         """
+        log.info(f"Attempting to authenticate user with email: {email}")
         user = await self.user_repository.get_by_email(email)
         if not user:
+            log.warning(f"User with email {email} not found")
             return None
         if not self.verify_password(password, user.hashed_password):
+            log.warning(f"Invalid password for user with email: {email}")
             return None
+        log.info(f"User {email} authenticated successfully")
         return UserInDB.model_validate(user)
 
     @staticmethod
