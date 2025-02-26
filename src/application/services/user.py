@@ -86,4 +86,5 @@ class UserService:
             List[UserWithAccounts]: List of all users with their accounts
         """
         users = await self.user_repository.get_all_with_accounts()
+        log.info(f"Retrieved {len(users)} users with accounts")
         return [UserWithAccounts.model_validate(user) for user in users]
