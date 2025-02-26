@@ -6,6 +6,7 @@ from src.config.config import settings
 from src.infrastructure.repositories.payment import PaymentRepository
 from src.infrastructure.repositories.account import AccountRepository
 from src.api.v1.schemas.payment import WebhookPayload, PaymentInDB
+from src.core.logger import log
 
 
 class PaymentService:
@@ -48,11 +49,14 @@ class PaymentService:
         data = f"{payload.account_id}{payload.amount}{payload.transaction_id}{payload.user_id}{settings.WEBHOOK_SECRET_KEY}"
         calculated_signature = hashlib.sha256(data.encode()).hexdigest()
 
+        is_valid = calculated_signature == payload.signature
+        log.debug(f"Signature verification: {'valid' if is_valid else 'invalid'}")
+
         # FOR DEBUGGING
         print(f"{data=}")
         print(f"{calculated_signature=}")
 
-        return calculated_signature == payload.signature
+        return is_valid
 
     async def _get_or_create_account(self, account_id: int, user_id: int) -> int:
         """
