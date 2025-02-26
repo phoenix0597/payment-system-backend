@@ -47,7 +47,7 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> UserInDB:
-    print(f"{token=}")
+    # print(f"{token=}")
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
