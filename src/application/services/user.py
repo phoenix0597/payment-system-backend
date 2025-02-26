@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from src.application.services.auth import AuthService
 from src.infrastructure.repositories.user import UserRepository
+from src.core.logger import log
 from src.api.v1.schemas.user import UserCreate, UserUpdate, UserInDB, UserWithAccounts
 
 
@@ -20,12 +21,14 @@ class UserService:
         Returns:
             UserInDB: The created user object
         """
+        log.info(f"Creating user with email: {user_data.email}")
         hashed_password = self.auth_service.get_password_hash(user_data.password)
         user = await self.user_repository.create(
             email=user_data.email,
             full_name=user_data.full_name,
             hashed_password=hashed_password,
         )
+        log.info(f"User {user.email} created successfully")
         return UserInDB.model_validate(user)
 
     async def update_user(
