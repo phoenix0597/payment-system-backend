@@ -59,7 +59,11 @@ class UserService:
         return None
 
     async def delete_user(self, user_id: int):
-        return await self.user_repository.delete(user_id)
+        log.info(f"Deleting user with ID: {user_id}")
+        success = await self.user_repository.delete(user_id)
+        if success:
+            log.info(f"User {user_id} deleted successfully")
+        return success
 
     async def get_user(self, user_id: int) -> Optional[UserInDB]:
         """
