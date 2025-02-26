@@ -15,6 +15,7 @@ python-multipart = "^0.0.20"
 alembic = "^1.14.1"
 bcrypt = "^4.2.1"
 loguru = "^0.7.3"
+redis = "^5.2.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
