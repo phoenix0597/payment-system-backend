@@ -1,6 +1,7 @@
 import hashlib
 from decimal import Decimal
 from typing import Optional, List
+from fastapi import HTTPException
 
 from src.application.services.cache import CacheService, get_cache_service
 from src.config.config import settings
@@ -62,7 +63,7 @@ class PaymentService:
 
     async def _get_or_create_account(self, account_id: int, user_id: int) -> int:
         """
-        Get an existing account ID if it belongs to the user, otherwise create a new one.
+        Get the account ID if it exists and belongs to the user, otherwise raise an error.
 
         Args:
             account_id (int): The account ID from the payload.
@@ -70,13 +71,26 @@ class PaymentService:
 
         Returns:
             int: The account ID to use for the payment.
+
+        Raises:
+            HTTPException: If the account exists but doesn't belong to the user.
         """
         account = await self.account_repository.get(account_id)
-        if account and account.user_id == user_id:
+        if account:
+            if account.user_id != user_id:
+                log.error(f"Account {account_id} does not belong to user_id {user_id}")
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Account {account_id} does not belong to user {user_id}",
+                )
+            log.debug(f"Found existing account ID {account_id} for user_id {user_id}")
             return account.id
-        # Если счет не существует или принадлежит другому пользователю, создаем новый
-        log.info(f"Creating new account for user_id: {user_id}")
-        new_account = await self.account_repository.create(user_id=user_id)
+
+        # Если счёт не существует, создаём его с указанным account_id
+        log.info(f"Creating new account with ID {account_id} for user_id {user_id}")
+        new_account = await self.account_repository.create(
+            id=account_id, user_id=user_id
+        )
         return new_account.id
 
     async def process_payment(self, payload: WebhookPayload) -> PaymentInDB:
