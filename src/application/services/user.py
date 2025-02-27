@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from src.application.services.auth import AuthService
+from src.application.services.cache import CacheService, get_cache_service
 from src.infrastructure.repositories.user import UserRepository
 from src.core.logger import log
 from src.api.v1.schemas.user import UserCreate, UserUpdate, UserInDB, UserWithAccounts
@@ -10,6 +11,7 @@ class UserService:
     def __init__(self, user_repository: UserRepository, auth_service: AuthService):
         self.user_repository = user_repository
         self.auth_service = auth_service
+        self.cache_service: CacheService = get_cache_service()
 
     async def create_user(self, user_data: UserCreate):
         """
@@ -53,7 +55,10 @@ class UserService:
         updated_user = await self.user_repository.update(user_id, **update_data)
         if updated_user:
             updated_user_schema = UserInDB.model_validate(updated_user)
-            log.info(f"User {user_id} updated successfully")
+            await self.cache_service.set(
+                f"user:{user_id}", updated_user_schema.model_dump()
+            )
+            log.info(f"User updated successfully for ID: {user_id}")
             return updated_user_schema
         log.warning(f"User {user_id} not found")
         return None
@@ -62,7 +67,10 @@ class UserService:
         log.info(f"Deleting user with ID: {user_id}")
         success = await self.user_repository.delete(user_id)
         if success:
-            log.info(f"User {user_id} deleted successfully")
+            await self.cache_service.delete(f"user:{user_id}")
+            log.info(f"User deleted successfully with ID: {user_id}")
+        else:
+            log.warning(f"User not found for deletion with ID: {user_id}")
         return success
 
     async def get_user(self, user_id: int) -> Optional[UserInDB]:
@@ -75,8 +83,18 @@ class UserService:
         Returns:
             Optional[UserInDB]: The user object if found, otherwise None
         """
+        cache_key = f"user:{user_id}"
+        cached_user = await self.cache_service.get(cache_key)
+        if cached_user:
+            log.debug(f"Cache hit for user_id: {user_id}")
+            return UserInDB(**cached_user)
         user = await self.user_repository.get(user_id)
-        return UserInDB.model_validate(user) if user else None
+        if user:
+            user_schema = UserInDB.model_validate(user)
+            await self.cache_service.set(cache_key, user_schema.model_dump())
+            log.info(f"User retrieved from DB with ID: {user_id}")
+            return user_schema
+        return None
 
     async def get_users(self) -> List[UserWithAccounts]:
         """
