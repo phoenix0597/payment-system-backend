@@ -2,6 +2,7 @@ import hashlib
 from decimal import Decimal
 from typing import Optional, List
 
+from src.application.services.cache import CacheService, get_cache_service
 from src.config.config import settings
 from src.infrastructure.repositories.payment import PaymentRepository
 from src.infrastructure.repositories.account import AccountRepository
@@ -34,6 +35,7 @@ class PaymentService:
         """
         self.payment_repository = payment_repository
         self.account_repository = account_repository
+        self.cache_service: CacheService = get_cache_service()
 
     @staticmethod
     def verify_signature(payload: WebhookPayload) -> bool:
@@ -115,7 +117,15 @@ class PaymentService:
 
         await self.account_repository.update_balance(account_id, payload.amount)
         payment_schema = PaymentInDB.model_validate(payment)
-        log.info(f"Processed payment with transaction_id: {payment.transaction_id}")
+
+        # Кэшируем отдельный платеж и инвалидируем список платежей пользователя
+        await self.cache_service.set(
+            f"payment:{payment.id}", payment_schema.model_dump()
+        )
+        await self.cache_service.delete(f"payments:user:{payload.user_id}")
+        log.info(
+            f"Payment processed successfully for transaction_id: {payment.transaction_id}"
+        )
         return payment_schema
 
     async def get_payment(self, payment_id: int) -> Optional[PaymentInDB]:
@@ -128,9 +138,16 @@ class PaymentService:
         Returns:
             Optional[PaymentInDB]: The payment if found, None otherwise.
         """
+        cache_key = f"payment:{payment_id}"
+        cached_payment = await self.cache_service.get(cache_key)
+        if cached_payment:
+            log.debug(f"Cache hit for payment {payment_id}")
+            return PaymentInDB(**cached_payment)
+
         payment = await self.payment_repository.get(payment_id)
         if payment:
             payment_schema = PaymentInDB.model_validate(payment)
+            await self.cache_service.set(cache_key, payment_schema.model_dump())
             return payment_schema
         return None
 
