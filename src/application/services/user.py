@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from typing import Optional, List
 
 from src.application.services.auth import AuthService
@@ -25,13 +27,26 @@ class UserService:
         """
         log.info(f"Creating user with email: {user_data.email}")
         hashed_password = self.auth_service.get_password_hash(user_data.password)
-        user = await self.user_repository.create(
-            email=user_data.email,
-            full_name=user_data.full_name,
-            hashed_password=hashed_password,
-        )
-        log.info(f"User {user.email} created successfully")
-        return UserInDB.model_validate(user)
+        try:
+            user = await self.user_repository.create(
+                email=user_data.email,
+                full_name=user_data.full_name,
+                hashed_password=hashed_password,
+            )
+            created_user = UserInDB.model_validate(user)
+            await self.cache_service.set(f"user:{user.id}", created_user.model_dump())
+            log.info(
+                f"User created successfully with ID: {user.id}, email: {user.email}"
+            )
+            return created_user
+        except IntegrityError as e:
+            log.warning(
+                f"Failed to create user: email {user_data.email} already exists"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"User with email '{user_data.email}' already exists",
+            )
 
     async def update_user(
         self, user_id: int, user_data: UserUpdate
