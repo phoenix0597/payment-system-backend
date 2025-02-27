@@ -60,7 +60,7 @@ class UserService:
             )
             log.info(f"User updated successfully for ID: {user_id}")
             return updated_user_schema
-        log.warning(f"User {user_id} not found")
+        log.warning(f"User not found for update with ID: {user_id}")
         return None
 
     async def delete_user(self, user_id: int):
