@@ -42,7 +42,7 @@ class AccountService:
         account = await self.account_repository.create(**account_data.model_dump())
         account_schema = AccountInDB.model_validate(account)
         # инвалидация кэша для счетов пользователя
-        await self.cache_service.delete(f"user:{account_schema.user_id}")
+        await self.cache_service.delete(f"accounts:user:{account_schema.user_id}")
         log.info(f"Account created successfully for user_id: {account_data.user_id}")
         return account_schema
 
