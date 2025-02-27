@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import List, Optional
 
+from src.config.config import settings
 from src.infrastructure.repositories.account import AccountRepository
 from src.api.v1.schemas.account import AccountCreate, AccountInDB
 from src.application.services.cache import CacheService, get_cache_service
