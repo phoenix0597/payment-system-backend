@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from src.infrastructure.repositories.account import AccountRepository
 from src.api.v1.schemas.account import AccountCreate, AccountInDB
+from src.application.services.cache import CacheService, get_cache_service
+from src.core.logger import log
 
 
 class AccountService:
@@ -23,6 +25,7 @@ class AccountService:
             account_repository (AccountRepository): The repository for account data access.
         """
         self.account_repository = account_repository
+        self.cache_service: CacheService = get_cache_service()
 
     async def create_account(self, account_data: AccountCreate) -> AccountInDB:
         """
@@ -35,7 +38,11 @@ class AccountService:
             AccountInDB: The created account.
         """
         account = await self.account_repository.create(**account_data.model_dump())
-        return AccountInDB.model_validate(account)
+        account_schema = AccountInDB.model_validate(account)
+        # инвалидация кэша для счетов пользователя
+        await self.cache_service.delete(f"user:{account_schema.user_id}")
+        log.info(f"Account created successfully for user_id: {account_data.user_id}")
+        return account_schema
 
     async def get_account(self, account_id: int) -> Optional[AccountInDB]:
         """
@@ -60,8 +67,20 @@ class AccountService:
         Returns:
             List[AccountInDB]: A list of accounts belonging to the user.
         """
+        cache_key = f"accounts:user:{user_id}"
+        cached_accounts = await self.cache_service.get(cache_key)
+        if cached_accounts:
+            log.debug(f"Cache hit for accounts of user_id: {user_id}")
+            return [AccountInDB(**acc) for acc in cached_accounts]
+
         accounts = await self.account_repository.get_by_user_id(user_id)
-        return [AccountInDB.model_validate(account) for account in accounts]
+        account_schemas = [AccountInDB.model_validate(acc) for acc in accounts]
+        await self.cache_service.set(
+            cache_key,
+            [acc.model_dump() for acc in account_schemas],
+            expire=settings.CACHE_TTL,
+        )
+        return account_schemas
 
     async def update_balance(self, account_id: int, amount: Decimal) -> AccountInDB:
         """
@@ -82,7 +101,10 @@ class AccountService:
         updated_account = await self.account_repository.update_balance(
             account_id, amount
         )
-        return AccountInDB.model_validate(updated_account)
+        account_schema = AccountInDB.model_validate(updated_account)
+        # инвалидация кэша для счетов пользователя
+        await self.cache_service.delete(f"user:{account_schema.user_id}")
+        return account_schema
 
     async def get_balance(self, account_id: int) -> Decimal:
         """
