@@ -161,8 +161,19 @@ class PaymentService:
         Returns:
             List[PaymentInDB]: A list of payments belonging to the user.
         """
+        cache_key = f"payments:user:{user_id}"
+        cached_payments = await self.cache_service.get(cache_key)
+        if cached_payments:
+            log.debug(f"Cache hit for payments of user {user_id}")
+            return [PaymentInDB(**payment_dict) for payment_dict in cached_payments]
+
         payments = await self.payment_repository.get_by_user_id(user_id)
         payment_schemas = [PaymentInDB.model_validate(payment) for payment in payments]
+        await self.cache_service.set(
+            cache_key,
+            [schema.model_dump() for schema in payment_schemas],
+            expire=settings.CACHE_TTL,
+        )
         log.info(f"Retrieved {len(payment_schemas)} payments for user_id: {user_id}")
         return payment_schemas
 
