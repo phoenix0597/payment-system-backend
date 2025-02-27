@@ -34,15 +34,15 @@ class AuthService:
         Returns:
             Optional[UserInDB]: Authenticated user or None
         """
-        log.info(f"Attempting to authenticate user with email: {email}")
+        log.info(f"Authenticating user with email: {email}")
         user = await self.user_repository.get_by_email(email)
         if not user:
-            log.warning(f"User with email {email} not found")
+            log.warning(f"Authentication failed: user not found with email: {email}")
             return None
         if not self.verify_password(password, user.hashed_password):
-            log.warning(f"Invalid password for user with email: {email}")
+            log.warning(f"Authentication failed: invalid password for email: {email}")
             return None
-        log.info(f"User {email} authenticated successfully")
+        log.info(f"User authenticated successfully with email: {email}")
         return UserInDB.model_validate(user)
 
     @staticmethod
