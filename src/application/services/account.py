@@ -37,6 +37,7 @@ class AccountService:
         Returns:
             AccountInDB: The created account.
         """
+        log.info(f"Creating account for user_id: {account_data.user_id}")
         account = await self.account_repository.create(**account_data.model_dump())
         account_schema = AccountInDB.model_validate(account)
         # инвалидация кэша для счетов пользователя
@@ -93,9 +94,11 @@ class AccountService:
         Returns:
             AccountInDB: The updated account.
         """
+        log.info(f"Updating balance for account_id: {account_id} by amount: {amount}")
         current_balance = await self.account_repository.get_balance(account_id)
         new_balance = current_balance + amount
         if new_balance < 0:
+            log.error(f"Negative balance not allowed for account_id: {account_id}")
             raise ValueError("Account balance cannot be negative")
 
         updated_account = await self.account_repository.update_balance(
@@ -116,4 +119,6 @@ class AccountService:
         Returns:
             Decimal: The balance of the account.
         """
-        return await self.account_repository.get_balance(account_id)
+        balance = await self.account_repository.get_balance(account_id)
+        log.debug(f"Retrieved balance {balance} for account_id: {account_id}")
+        return balance
