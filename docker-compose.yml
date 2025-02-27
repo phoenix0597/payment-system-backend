@@ -10,16 +10,28 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    env_file:
+      - src/.env.sample
+    #      - src/.env
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+
 #  app:
 #    build: .
+#    env_file:
+#      - src/.env.sample
+#      - src/.env
 #    ports:
 #      - "8000:8000"
-#    environment:
-#      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/payment_system
-#      SECRET_KEY: "your-secret-key-here"
-#      WEBHOOK_SECRET_KEY: "gfdmhghif38yrf9ew0jkf32"
 #    depends_on:
 #      - db
+#      - redis
+#    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:
+  redis_data:
