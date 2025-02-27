@@ -53,7 +53,9 @@ class PaymentService:
         calculated_signature = hashlib.sha256(data.encode()).hexdigest()
 
         is_valid = calculated_signature == payload.signature
-        log.debug(f"Signature verification: {'valid' if is_valid else 'invalid'}")
+        log.debug(
+            f"Verifying signature for transaction_id: {payload.transaction_id}, result: {'valid' if is_valid else 'invalid'}"
+        )
 
         # FOR DEBUGGING
         print(f"{data=}")
@@ -115,7 +117,9 @@ class PaymentService:
             payload.transaction_id,
         )
         if existing_payment:
-            log.warning(f"Duplicate transaction_id: {payload.transaction_id}")
+            log.warning(
+                f"Duplicate payment detected for transaction_id: {payload.transaction_id}"
+            )
             raise ValueError("Transaction already processed")
 
         account_id = await self._get_or_create_account(
