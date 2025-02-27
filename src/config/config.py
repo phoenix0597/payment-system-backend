@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api/v1"
     TOKEN_URL: str = "/auth/token"
 
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    CACHE_TTL: int = 300
+
     model_config = SettingsConfigDict(
         env_file=[BASE_DIR / ".env.sample", BASE_DIR / ".env"],
         env_file_encoding="utf-8",
