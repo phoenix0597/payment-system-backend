@@ -19,3 +19,4 @@ redis = "^5.2.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
+pytest = "^8.3.4"
