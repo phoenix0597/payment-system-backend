@@ -27,6 +27,7 @@ asyncmock = "^0.4.2"
 fakeredis = "^2.27.0"
 sqlalchemy-utils = "^0.41.2"
 testcontainers = "^4.9.1"
+pytest-mock = "^3.14.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
