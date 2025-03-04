@@ -1,6 +1,7 @@
 # tests/conftest.py
 import pytest
 from fastapi.testclient import TestClient
+from testcontainers.postgres import PostgresContainer
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.main import app
@@ -12,7 +13,7 @@ from src.application.services.base import ServiceFactory
 
 # Тестовые настройки базы данных
 test_settings = Settings(
-    DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:5432/test_db",
+    # DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:5432/test_db",
     SECRET_KEY="test-secret-key",
     WEBHOOK_SECRET_KEY="test-webhook-secret",
     REDIS_HOST="localhost",
@@ -24,9 +25,15 @@ test_settings = Settings(
 # Фикстура для тестовой базы данных
 @pytest.fixture(scope="session")
 def engine():
-    engine = create_async_engine(test_settings.DATABASE_URL, echo=True)
-    yield engine
-    engine.sync_engine.dispose()
+    # Запускаем PostgreSQL-контейнер
+    with PostgresContainer("postgres:17-alpine", driver="asyncpg") as postgres:
+        # Получаем URL подключения из контейнера
+        database_url = postgres.get_connection_url()
+        # Создаём движок
+        engine = create_async_engine(database_url, echo=True)
+        yield engine
+        # После завершения тестов движок закроется автоматически
+        engine.sync_engine.dispose()
 
 
 @pytest.fixture(scope="function")
