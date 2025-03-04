@@ -29,5 +29,5 @@ sqlalchemy-utils = "^0.41.2"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-addopts = "--cov=src --cov-report=html --cov-fail-under=90"
+addopts = "--cov=src --cov-report=html --cov-fail-under=90 -v"
 testpaths = ["tests"]
