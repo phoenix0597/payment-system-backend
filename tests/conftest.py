@@ -24,7 +24,7 @@ test_settings = Settings(
 
 # Фикстура для тестовой базы данных
 @pytest.fixture(scope="session")
-def engine():
+async def engine():
     # Запускаем PostgreSQL-контейнер
     with PostgresContainer("postgres:17-alpine", driver="asyncpg") as postgres:
         # Получаем URL подключения из контейнера
